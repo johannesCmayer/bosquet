@@ -61,7 +61,7 @@ clojure -M -m bosquet.cli -p demo/play-writer-prompt.edn -d demo/play-writer-dat
 
 Simple prompt completion can be done like this.
 
-```colojure
+```clojure
 (require '[bosquet.llm.generator :refer [generate llm]])
 
 (generate "When I was 6 my sister was half my age. Now I’m 70 how old is my sister?")
@@ -72,11 +72,9 @@ Simple prompt completion can be done like this.
 ### Completion from the prompt map
 
 ```clojure
-(require '[bosquet.llm :as llm])
 (require '[bosquet.llm.generator :refer [generate llm]])
 
 (generate
- llm/default-services
  {:question-answer "Question: {{question}}  Answer: {{answer}}"
   :answer          (llm :openai)
   :self-eval       ["Question: {{question}}"
@@ -137,6 +135,30 @@ Simple prompt completion can be done like this.
 ```
 
 Generation returns `:bosquet/conversation` listing full chat with generated parts filled in, and `:bosquet/completions` containing only generated data
+
+### Caching
+
+Repeated requests with the same prompt and model parameters can reuse cached results by adding `:llm/cache true` to the LLM definition.
+
+```clojure
+(generate
+ {:qna    "Question: {{question}}  Answer: {{answer}}"
+  :answer (llm :openai wkk/cache true)}
+ {:question "What is the distance from Moon to Io?"})
+```
+
+### Output formats
+
+Use `:llm/output-format` to coerce generation results. For example, requesting a list:
+
+```clojure
+(generate
+ [[:user "Provide a bullet list of 3 colors"]
+  [:assistant (llm :gpt-4
+                    wkk/output-format :list
+                    wkk/var-name :colors)]] )
+;; => #:bosquet{:completions {:colors ["red" "blue" "green"]}}
+```
 
 ### Tools
 
